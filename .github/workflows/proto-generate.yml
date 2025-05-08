@@ -1,0 +1,55 @@
+name: Generate Protobuf Files
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  generate-proto:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Install protoc
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y protobuf-compiler
+
+    - name: Install protoc plugins
+      run: |
+        go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+        go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+        export PATH=$PATH:$(go env GOPATH)/bin
+
+    - name: Generate Go code from proto
+      run: |
+        export PATH=$PATH:$(go env GOPATH)/bin
+        PROTO_DIR=app/model/proto
+        OUT_DIR=generated
+        mkdir -p $OUT_DIR
+        for file in $(find $PROTO_DIR -name '*.proto'); do
+          protoc \
+            --go_out=$OUT_DIR \
+            --go-grpc_out=$OUT_DIR \
+            --proto_path=$PROTO_DIR \
+            $file
+        done
+
+    - name: Commit generated files
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add generated/
+        git commit -m "ci: update generated proto files"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
