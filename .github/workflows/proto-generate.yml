@@ -43,9 +43,8 @@ jobs:
             --proto_path=$PROTO_DIR \
             $file
         done
-
     - name: Upload generated files as artifact
       uses: actions/upload-artifact@v3
       with:
-        name: proto-generated
+        name: proto-generate
         path: generated/
