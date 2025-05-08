@@ -44,7 +44,7 @@ jobs:
             $file
         done
     - name: Upload generated files as artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: proto-generate
         path: generated/
